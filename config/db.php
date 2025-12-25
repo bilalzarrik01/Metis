@@ -1,19 +1,30 @@
 <?php
 
-$host = "localhost";
-$db   = "Metis";
-$user = "root";
-$pass = "";
-$port = 3307;
+class DB
+{
+    private string $host = "localhost";
+    private string $db   = "metis";
+    private string $user = "root";
+    private string $pass = "";
+    private int $port = 3307;
 
-$dsn = "mysql:host=$host;dbname=$db;port=$port;charset=utf8mb4";
+    private static $instant;
+    public function connect(): PDO
+    {
+        try {
+            return new PDO(
+                "mysql:host={$this->host};dbname={$this->db};port={$this->port};charset=utf8",
+                $this->user,
+                $this->pass,
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                ]
+            );
+        } catch (PDOException $e) {
+            die("DB connection error: " . $e->getMessage());
+        }
 
-try {
-    $pdo = new PDO($dsn, $user, $pass, [
-        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION, 
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,       
-        PDO::ATTR_EMULATE_PREPARES   => false,                 
-    ]);
-} catch (PDOException $e) {
-    die("Erreur connexion DB : " . $e->getMessage());
+
+    }
 }
