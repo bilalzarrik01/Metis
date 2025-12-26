@@ -1,111 +1,259 @@
 <?php
 
-
+/* =====================
+   REQUIRE FILES
+===================== */
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../core/BaseModel.php';
+
 require_once __DIR__ . '/../models/Member.php';
 require_once __DIR__ . '/../models/ProjectCourt.php';
 require_once __DIR__ . '/../models/ProjectLong.php';
 require_once __DIR__ . '/../models/Activite.php';
 
-
-use \PDO;
-
-// Set DB connection for all models
+/* =====================
+   PDO CONNECTION
+===================== */
 $pdo = DB::connect();
 BaseModel::setConnection($pdo);
 
-function prompt(string $message): string {
-    echo $message;
+/* =====================
+   CLI HELPER
+===================== */
+function ask(string $label): string {
+    echo $label;
     return trim(fgets(STDIN));
 }
 
-function menu(): void {
-    echo "\n=== Metis CLI ===\n";
-    echo "1. List Members\n";
-    echo "2. Add Member\n";
-    echo "3. List Projects\n";
-    echo "4. Add Project\n";
-    echo "5. List Activities\n";
-    echo "6. Add Activity\n";
-    echo "7. Exit\n";
-    echo "Choose an option: ";
-}
-
+/* =====================
+   MAIN LOOP
+===================== */
 while (true) {
-    menu();
-    $choice = trim(fgets(STDIN));
 
-    switch ($choice) {
-        case '1':
-            $members = Member::all();
-            echo "\n--- Members ---\n";
-            foreach ($members as $m) {
-                echo "[{$m->getId()}] {$m->getName()} ({$m->getEmail()})\n";
-            }
-            break;
+    echo "\n========= METIS CLI =========\n";
+    echo "1. Members\n";
+    echo "2. Projects\n";
+    echo "3. Activities\n";
+    echo "0. Exit\n";
 
-        case '2':
-            $name = prompt("Enter name: ");
-            $email = prompt("Enter email: ");
+    $choice = ask("Choice: ");
+
+    /* =====================
+       MEMBERS
+    ===================== */
+    if ($choice === '1') {
+
+        echo "\n--- MEMBERS ---\n";
+        echo "1. Create member\n";
+        echo "2. List members\n";
+        echo "3. Update member\n";
+        echo "4. Delete member\n";
+
+        $c = ask("Choice: ");
+
+        // CREATE
+        if ($c === '1') {
             try {
+                $name  = ask("Full name: ");
+                $email = ask("Email: ");
+
                 $member = new Member($name, $email);
                 $member->save();
-                echo "Member created with ID {$member->getId()}\n";
+
+                echo "Member created (ID {$member->getId()})\n";
             } catch (Exception $e) {
                 echo "Error: {$e->getMessage()}\n";
             }
-            break;
+        }
 
-        case '3':
-            $projects = array_merge(ProjectCourt::all(), ProjectLong::all());
-            echo "\n--- Projects ---\n";
-            foreach ($projects as $p) {
-                echo "[{$p->getId()}] {$p->getTitle()} ({$p->getType()})\n";
+        // LIST
+        if ($c === '2') {
+            $members = Member::all();
+            foreach ($members as $m) {
+                echo "[{$m->getId()}] {$m->getFullName()} - {$m->getEmail()}\n";
             }
-            break;
+        }
 
-        case '4':
-            $memberId = (int) prompt("Enter member ID: ");
-            $title = prompt("Enter project title: ");
-            $type = strtolower(prompt("Enter project type (court/long): "));
-            try {
-                if ($type === 'court') {
-                    $proj = new ProjectCourt($memberId, $title);
-                } else {
-                    $proj = new ProjectLong($memberId, $title);
+        // UPDATE
+        if ($c === '3') {
+            $id = (int) ask("Member ID: ");
+            $member = Member::findById($id);
+
+            if (!$member) {
+                echo "Member not found\n";
+                continue;
+            }
+
+            $name  = ask("New name (enter to skip): ");
+            $email = ask("New email (enter to skip): ");
+
+            if ($name !== '')  $member->setFullName($name);
+            if ($email !== '') $member->setEmail($email);
+
+            $member->save();
+            echo "Member updated\n";
+        }
+
+        // DELETE
+        if ($c === '4') {
+            $id = (int) ask("Member ID: ");
+            $member = Member::findById($id);
+
+            if (!$member) {
+                echo "Member not found\n";
+                continue;
+            }
+
+            // Rule: cannot delete member with projects
+            foreach (array_merge(ProjectCourt::all(), ProjectLong::all()) as $p) {
+                if ($p->getMemberId() === $member->getId()) {
+                    echo "Cannot delete: member has projects\n";
+                    continue 2;
                 }
-                $proj->save();
-                echo "Project created with ID {$proj->getId()}\n";
+            }
+
+            $member->delete();
+            echo "Member deleted\n";
+        }
+    }
+
+    /* =====================
+       PROJECTS
+    ===================== */
+    if ($choice === '2') {
+
+        echo "\n--- PROJECTS ---\n";
+        echo "1. Create project\n";
+        echo "2. List projects\n";
+        echo "3. Delete project\n";
+
+        $c = ask("Choice: ");
+
+        // CREATE
+        if ($c === '1') {
+            try {
+                $memberId = (int) ask("Member ID: ");
+                if (!Member::exists($memberId)) {
+                    echo "Member not found\n";
+                    continue;
+                }
+
+                $title = ask("Project title: ");
+                $type  = ask("Type (court / long): ");
+
+                $project = ($type === 'court')
+                    ? new ProjectCourt($memberId, $title)
+                    : new ProjectLong($memberId, $title);
+
+                $project->save();
+                echo "Project created (ID {$project->getId()})\n";
             } catch (Exception $e) {
                 echo "Error: {$e->getMessage()}\n";
             }
-            break;
+        }
 
-        case '5':
-            $projectId = (int) prompt("Enter project ID: ");
-            $activities = Activite::getByProject($projectId);
-            echo "\n--- Activities for Project {$projectId} ---\n";
-            foreach ($activities as $a) {
+        // LIST
+        if ($c === '2') {
+            foreach (array_merge(ProjectCourt::all(), ProjectLong::all()) as $p) {
+                echo "[{$p->getId()}] {$p->getTitle()} ({$p->getType()}) | Member {$p->getMemberId()}\n";
+            }
+        }
+
+        // DELETE
+        if ($c === '3') {
+            $id = (int) ask("Project ID: ");
+
+            $project = ProjectCourt::findById($id) ?? ProjectLong::findById($id);
+
+            if (!$project) {
+                echo "Project not found\n";
+                continue;
+            }
+
+            // Rule: no active activities
+            if (Activite::countByStatus($project->getId(), 'en_cours') > 0) {
+                echo "Cannot delete: active activities exist\n";
+                continue;
+            }
+
+            $project->delete();
+            echo "Project deleted\n";
+        }
+    }
+
+    /* =====================
+       ACTIVITIES
+    ===================== */
+    if ($choice === '3') {
+
+        echo "\n--- ACTIVITIES ---\n";
+        echo "1. Add activity\n";
+        echo "2. List activities\n";
+        echo "3. Update activity\n";
+        echo "4. Delete activity\n";
+
+        $c = ask("Choice: ");
+
+        // ADD
+        if ($c === '1') {
+            try {
+                $projectId = (int) ask("Project ID: ");
+                $desc = ask("Description: ");
+
+                $act = Activite::ajouterActivite($projectId, $desc);
+                echo "Activity created (ID {$act->getId()})\n";
+            } catch (Exception $e) {
+                echo "Error: {$e->getMessage()}\n";
+            }
+        }
+
+        // LIST
+        if ($c === '2') {
+            $projectId = (int) ask("Project ID: ");
+            $acts = Activite::getByProject($projectId);
+
+            foreach ($acts as $a) {
                 echo "[{$a->getId()}] {$a->getDescription()} ({$a->getStatus()})\n";
             }
-            break;
+        }
 
-        case '6':
-            $projectId = (int) prompt("Enter project ID: ");
-            $desc = prompt("Enter activity description: ");
-            try {
-                $act = Activite::ajouterActivite($projectId, $desc);
-                echo "Activity created with ID {$act->getId()}\n";
-            } catch (Exception $e) {
-                echo "Error: {$e->getMessage()}\n";
+        // UPDATE
+        if ($c === '3') {
+            $id = (int) ask("Activity ID: ");
+            $act = Activite::findById($id);
+
+            if (!$act) {
+                echo "Activity not found\n";
+                continue;
             }
-            break;
 
-        case '7':
-            echo "Goodbye!\n";
-            exit;
+            $desc = ask("New description (enter to skip): ");
+            $status = ask("Status (en_cours / terminee): ");
 
-        default:
-            echo "Invalid choice.\n";
+            $data = [];
+            if ($desc !== '')   $data['description'] = $desc;
+            if ($status !== '') $data['status'] = $status;
+
+            $act->modifierActivite($data);
+            echo "Activity updated\n";
+        }
+
+        // DELETE
+        if ($c === '4') {
+            $id = (int) ask("Activity ID: ");
+            $act = Activite::findById($id);
+
+            if (!$act) {
+                echo "Activity not found\n";
+                continue;
+            }
+
+            $act->supprimerActivite();
+            echo "Activity deleted\n";
+        }
+    }
+
+    if ($choice === '0') {
+        exit("\nBye 👋\n");
     }
 }
