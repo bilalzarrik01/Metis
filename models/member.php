@@ -1,5 +1,5 @@
 <?php
-
+require_once __DIR__ ."/../config/db.php";
 require_once __DIR__ . '/../core/BaseModel.php';
 
 class Member extends BaseModel
@@ -58,3 +58,5 @@ class Member extends BaseModel
         return $stmt->fetchColumn() > 0;
     }
 }
+
+

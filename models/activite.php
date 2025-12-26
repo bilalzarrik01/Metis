@@ -397,3 +397,4 @@ class Activite extends BaseModel
         );
     }
 }
+

@@ -5,26 +5,31 @@ class DB
     private string $host = "localhost";
     private string $db   = "metis";
     private string $user = "root";
-    private string $pass = "";
-    private int $port = 3307;
+    private string $pass = "azer1234";
+    private int $port = 3306;
 
-    private static $instant;
-    public function connect(): PDO
+    private static ?PDO $instance = null;
+
+    private function __construct() {}
+
+    public static function connect(): PDO
     {
-        try {
-            return new PDO(
-                "mysql:host={$this->host};dbname={$this->db};port={$this->port};charset=utf8",
-                $this->user,
-                $this->pass,
-                [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                ]
-            );
-        } catch (PDOException $e) {
-            die("DB connection error: " . $e->getMessage());
+        if (self::$instance === null) {
+            try {
+                self::$instance = new PDO(
+                    "mysql:host=localhost;dbname=metis;port=3306;charset=utf8",
+                    "root",
+                    "azer1234",
+                    [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    ]
+                );
+            } catch (PDOException $e) {
+                die("DB connection error: " . $e->getMessage());
+            }
         }
 
-
+        return self::$instance;
     }
 }
