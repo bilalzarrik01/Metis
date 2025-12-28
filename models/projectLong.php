@@ -8,7 +8,7 @@ class ProjectLong extends Project
         parent::__construct($member_id, $title, 'long');
     }
 
-    // You can add methods specific to "long" projects
+ 
     public function getDuration(): ?string
     {
         if ($this->start_date && $this->end_date) {

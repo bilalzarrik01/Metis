@@ -3,7 +3,7 @@ require_once __DIR__ . '/../core/BaseModel.php';
 
 class Activite extends BaseModel
 {
-    protected static string $table = 'activites';
+    protected static string $table = 'activities';
     protected static array $ignoredFields = ['id', 'created_at'];
     protected static array $immutableFields = ['id', 'created_at'];
 
@@ -161,7 +161,7 @@ class Activite extends BaseModel
     public static function getByProject(int $project_id): array
     {
         $stmt = self::$conn->prepare(
-            "SELECT * FROM activites 
+            "SELECT * FROM activities 
              WHERE project_id = :project_id 
              ORDER BY created_at DESC"
         );
@@ -173,7 +173,7 @@ class Activite extends BaseModel
     public static function getByStatus(int $project_id, string $status): array
     {
         $stmt = self::$conn->prepare(
-            "SELECT * FROM activites 
+            "SELECT * FROM activities 
              WHERE project_id = :project_id AND status = :status 
              ORDER BY created_at DESC"
         );
@@ -188,7 +188,7 @@ class Activite extends BaseModel
     public static function countByProject(int $project_id): int
     {
         $stmt = self::$conn->prepare(
-            "SELECT COUNT(*) FROM activites WHERE project_id = :project_id"
+            "SELECT COUNT(*) FROM activities WHERE project_id = :project_id"
         );
         $stmt->execute([':project_id' => $project_id]);
         return (int) $stmt->fetchColumn();
@@ -197,7 +197,7 @@ class Activite extends BaseModel
     public static function countByStatus(int $project_id, string $status): int
     {
         $stmt = self::$conn->prepare(
-            "SELECT COUNT(*) FROM activites 
+            "SELECT COUNT(*) FROM activities 
              WHERE project_id = :project_id AND status = :status"
         );
         $stmt->execute([
@@ -263,7 +263,7 @@ class Activite extends BaseModel
     public static function searchByKeyword(int $project_id, string $keyword): array
     {
         $stmt = self::$conn->prepare(
-            "SELECT * FROM activites
+            "SELECT * FROM activities
              WHERE project_id = :project_id
              AND description LIKE :keyword
              ORDER BY created_at DESC"
@@ -279,7 +279,7 @@ class Activite extends BaseModel
     public static function getRecentActivities(int $project_id, int $limit = 10): array
     {
         $stmt = self::$conn->prepare(
-            "SELECT * FROM activites
+            "SELECT * FROM activities
              WHERE project_id = :project_id
              ORDER BY created_at DESC
              LIMIT :limit"

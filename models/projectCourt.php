@@ -8,7 +8,6 @@ class ProjectCourt extends Project
         parent::__construct($member_id, $title, 'court');
     }
 
-    // You can add methods specific to "court" projects
     public function getShortDescription(): string
     {
         return substr($this->title, 0, 50);
