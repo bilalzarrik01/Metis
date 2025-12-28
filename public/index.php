@@ -1,8 +1,6 @@
 <?php
 
-/* =====================
-   REQUIRE FILES
-===================== */
+
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../core/BaseModel.php';
 
@@ -11,23 +9,21 @@ require_once __DIR__ . '/../models/ProjectCourt.php';
 require_once __DIR__ . '/../models/ProjectLong.php';
 require_once __DIR__ . '/../models/Activite.php';
 
-/* =====================
-   PDO CONNECTION
-===================== */
+
+
 $pdo = DB::connect();
 BaseModel::setConnection($pdo);
 
-/* =====================
-   CLI HELPER
-===================== */
+
+//    CLI HELPER
+
 function ask(string $label): string {
     echo $label;
     return trim(fgets(STDIN));
 }
 
-/* =====================
-   MAIN LOOP
-===================== */
+
+
 while (true) {
 
     echo "\n========= METIS CLI =========\n";
@@ -38,9 +34,9 @@ while (true) {
 
     $choice = ask("Choice: ");
 
-    /* =====================
-       MEMBERS
-    ===================== */
+ 
+    //    MEMBERS
+ 
     if ($choice === '1') {
 
         echo "\n--- MEMBERS ---\n";
@@ -104,7 +100,8 @@ while (true) {
                 continue;
             }
 
-            // Rule: cannot delete member with projects
+            // c'ant delete a mbr with a prjct
+
             foreach (array_merge(ProjectCourt::all(), ProjectLong::all()) as $p) {
                 if ($p->getMemberId() === $member->getId()) {
                     echo "Cannot delete: member has projects\n";
@@ -117,9 +114,8 @@ while (true) {
         }
     }
 
-    /* =====================
-       PROJECTS
-    ===================== */
+    //    PROJECTS
+
     if ($choice === '2') {
 
         echo "\n--- PROJECTS ---\n";
@@ -181,9 +177,8 @@ while (true) {
         }
     }
 
-    /* =====================
-       ACTIVITIES
-    ===================== */
+    //    ACTIVITIES
+  
     if ($choice === '3') {
 
         echo "\n--- ACTIVITIES ---\n";
